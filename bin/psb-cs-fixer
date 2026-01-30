@@ -1,0 +1,205 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use PhpCsFixer\Console\Application;
+use PhpSoftBox\CliApp\CliApp;
+use PhpSoftBox\CliApp\Command\Command;
+use PhpSoftBox\CliApp\Command\ArgumentDefinition as Arg;
+use PhpSoftBox\CliApp\Command\InMemoryCommandRegistry;
+use PhpSoftBox\CliApp\Command\OptionDefinition as Opt;
+use PhpSoftBox\CliApp\Io\ConsoleIo;
+use PhpSoftBox\CliApp\Runner\RunnerInterface;
+use Symfony\Component\Console\Input\ArgvInput;
+use Symfony\Component\Console\Output\ConsoleOutput;
+
+$autoload = null;
+$autoloadCandidates = [
+    __DIR__ . '/../autoload.php',
+    __DIR__ . '/../../../autoload.php',
+    getcwd() . '/vendor/autoload.php',
+];
+foreach ($autoloadCandidates as $candidate) {
+    if (is_file($candidate)) {
+        $autoload = $candidate;
+        break;
+    }
+}
+if ($autoload === null) {
+    fwrite(STDERR, "Autoload file not found. Run composer install.\n");
+    exit(1);
+}
+require $autoload;
+
+$signature = [
+    new Arg(
+        name: 'paths',
+        description: 'Paths to scan (files or directories)',
+        required: false,
+        variadic: true,
+        type: 'string',
+    ),
+    new Opt(
+        name: 'config',
+        description: 'Config file path',
+        required: false,
+        type: 'string',
+    ),
+    new Opt(
+        name: 'dry-run',
+        description: 'Only shows which files would have been modified',
+        flag: true,
+    ),
+    new Opt(
+        name: 'diff',
+        description: 'Print diff for each file',
+        flag: true,
+        default: true,
+    ),
+    new Opt(
+        name: 'format',
+        description: 'Output format',
+        required: false,
+        type: 'string',
+    ),
+    new Opt(
+        name: 'path-mode',
+        description: 'Path mode (override|intersection)',
+        required: false,
+        type: 'string',
+    ),
+    new Opt(
+        name: 'cache-file',
+        description: 'Cache file path',
+        required: false,
+        type: 'string',
+    ),
+    new Opt(
+        name: 'using-cache',
+        description: 'Use cache (yes/no)',
+        required: false,
+        type: 'bool',
+    ),
+    new Opt(
+        name: 'show-progress',
+        description: 'Progress output type',
+        required: false,
+        type: 'string',
+    ),
+    new Opt(
+        name: 'stop-on-violation',
+        description: 'Stop on first violation',
+        flag: true,
+    ),
+    new Opt(
+        name: 'sequential',
+        description: 'Force sequential analysis',
+        flag: true,
+    ),
+];
+
+$registry = new InMemoryCommandRegistry();
+$registry->register(Command::define(
+    name: 'fix',
+    description: 'Fix files with PhpSoftBox rules',
+    signature: $signature,
+    handler: static fn (RunnerInterface $runner): int => run_cs_fixer($runner, 'fix'),
+));
+$registry->register(Command::define(
+    name: 'check',
+    description: 'Check files without applying fixes',
+    signature: $signature,
+    handler: static fn (RunnerInterface $runner): int => run_cs_fixer($runner, 'check'),
+));
+
+$app = new CliApp($registry, new ConsoleIo());
+$runner = $app->runner();
+
+$argv = $_SERVER['argv'] ?? [];
+array_shift($argv);
+$command = $argv[0] ?? '';
+if ($command !== '') {
+    array_shift($argv);
+}
+
+$response = $runner->run($command, $argv);
+exit($response->code);
+
+/**
+ * @return list<string>
+ */
+function build_cs_fixer_argv(RunnerInterface $runner, string $mode): array
+{
+    $request = $runner->request();
+    $argv = ['psb-cs-fixer', $mode];
+
+    $config = $request->option('config');
+    if (is_string($config) && $config !== '') {
+        $argv[] = '--config=' . $config;
+    }
+
+    if ($mode === 'fix' && (bool) $request->option('dry-run', false)) {
+        $argv[] = '--dry-run';
+    }
+
+    if ((bool) $request->option('diff', false)) {
+        $argv[] = '--diff';
+    }
+
+    $format = $request->option('format');
+    if (is_string($format) && $format !== '') {
+        $argv[] = '--format=' . $format;
+    }
+
+    $pathMode = $request->option('path-mode');
+    if (is_string($pathMode) && $pathMode !== '') {
+        $argv[] = '--path-mode=' . $pathMode;
+    }
+
+    $cacheFile = $request->option('cache-file');
+    if (is_string($cacheFile) && $cacheFile !== '') {
+        $argv[] = '--cache-file=' . $cacheFile;
+    }
+
+    $usingCache = $request->option('using-cache');
+    if (is_bool($usingCache)) {
+        $argv[] = '--using-cache=' . ($usingCache ? 'yes' : 'no');
+    }
+
+    $showProgress = $request->option('show-progress');
+    if (is_string($showProgress) && $showProgress !== '') {
+        $argv[] = '--show-progress=' . $showProgress;
+    }
+
+    if ((bool) $request->option('stop-on-violation', false)) {
+        $argv[] = '--stop-on-violation';
+    }
+
+    if ((bool) $request->option('sequential', false)) {
+        $argv[] = '--sequential';
+    }
+
+    $paths = $request->param('paths', []);
+    if (!is_array($paths)) {
+        $paths = [$paths];
+    }
+    foreach ($paths as $path) {
+        if ($path !== '') {
+            $argv[] = (string) $path;
+        }
+    }
+
+    return $argv;
+}
+
+function run_cs_fixer(RunnerInterface $runner, string $mode): int
+{
+    $application = new Application();
+    $application->setAutoExit(false);
+
+    return $application->run(
+        new ArgvInput(build_cs_fixer_argv($runner, $mode)),
+        new ConsoleOutput(),
+    );
+}

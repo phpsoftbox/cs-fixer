@@ -1,0 +1,40 @@
+{
+    "name": "phpsoftbox/cs-fixer",
+    "description": "CS Fixer rules for the PhpSoftBox framework",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Anton K.",
+            "email": "inspector-who@mail.ru"
+        }
+    ],
+    "require": {
+        "php": "^8.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.2",
+        "friendsofphp/php-cs-fixer": "^3.93",
+        "phpsoftbox/cli-app": "dev-master"
+    },
+    "autoload": {
+        "psr-4": {
+            "PhpSoftBox\\CsFixer\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "PhpSoftBox\\CsFixer\\Tests\\": "tests/"
+        }
+    },
+    "bin": [
+        "bin/psb-cs-fixer"
+    ],
+    "scripts": {
+        "test": "phpunit"
+    },
+    "minimum-stability": "dev",
+    "repositories": [
+        { "type": "vcs", "url": "git@github.com:phpsoftbox/cli-app.git", "no-api": true }
+    ]
+}
