@@ -33,8 +33,5 @@
     "scripts": {
         "test": "phpunit"
     },
-    "minimum-stability": "dev",
-    "repositories": [
-        { "type": "vcs", "url": "git@github.com:phpsoftbox/cli-app.git", "no-api": true }
-    ]
+    "minimum-stability": "dev"
 }
