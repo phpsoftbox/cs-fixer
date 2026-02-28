@@ -16,10 +16,10 @@ final class FixerProvider
      */
     public static function getFixers(): array
     {
-        return array(
+        return [
             new BlankLineAfterNewInstantiationFixer(),
             new ConstructorParamsMultilineFixer(),
             new NoParenthesesAroundNewFixer(),
-        );
+        ];
     }
 }

@@ -31,6 +31,8 @@
         "bin/psb-cs-fixer"
     ],
     "scripts": {
+        "cs:fix": "bin/psb-cs-fixer fix",
+        "cs:check": "bin/psb-cs-fixer check --diff",
         "test": "phpunit"
     },
     "minimum-stability": "dev"

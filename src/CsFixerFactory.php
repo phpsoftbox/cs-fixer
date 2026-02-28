@@ -61,7 +61,8 @@ final class CsFixerFactory
                 'import_constants' => true,
                 'import_functions' => true,
             ],
-            'native_function_invocation' => [
+            'fully_qualified_strict_types' => true,
+            'native_function_invocation'   => [
                 'include' => ['@all'],
                 'scope'   => 'namespaced',
                 'strict'  => true,
