@@ -7,6 +7,7 @@ namespace PhpSoftBox\CsFixer;
 use PhpCsFixer\Fixer\FixerInterface;
 use PhpSoftBox\CsFixer\Fixers\BlankLineAfterNewInstantiationFixer;
 use PhpSoftBox\CsFixer\Fixers\ConstructorParamsMultilineFixer;
+use PhpSoftBox\CsFixer\Fixers\EchoTagHtmlEscapeFixer;
 use PhpSoftBox\CsFixer\Fixers\NoParenthesesAroundNewFixer;
 
 final class FixerProvider
@@ -19,6 +20,7 @@ final class FixerProvider
         return [
             new BlankLineAfterNewInstantiationFixer(),
             new ConstructorParamsMultilineFixer(),
+            new EchoTagHtmlEscapeFixer(),
             new NoParenthesesAroundNewFixer(),
         ];
     }

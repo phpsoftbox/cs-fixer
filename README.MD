@@ -80,6 +80,39 @@ vendor/bin/psb-cs-fixer fix
 vendor/bin/psb-cs-fixer check
 ```
 
+### Проверка PHTML-шаблонов
+
+Для шаблонов `.phtml` лучше использовать отдельный конфиг и отдельный cache-файл:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use PhpCsFixer\Finder;
+use PhpSoftBox\CsFixer\Console\AbstractCsFixerHandler;
+
+return new class extends AbstractCsFixerHandler {
+    protected function getFinder(): Finder
+    {
+        return Finder::create()
+            ->in([__DIR__ . '/../resources/views'])
+            ->name('*.phtml');
+    }
+
+    protected function cacheFile(): ?string
+    {
+        return getcwd() . '/.php-cs-fixer.phtml.cache';
+    }
+};
+```
+
+В пакет добавлен fixer `PhpSoftBox/echo_tag_html_escape`:
+- для `phtml` проверяет вывод `<?= ... ?>` / `<?php echo ... ?>`;
+- небезопасный вывод автоматически оборачивает в `html(...)`;
+- `raw(...)` разрешён как явный bypass для доверенного HTML;
+- для email-layout дополнительно разрешены доверенные переменные `$content` и `$unsubscribeBlock`.
+
 Поддерживаемые опции:
 
 - `--config=<path>` (если не указано, берётся файл из корня)

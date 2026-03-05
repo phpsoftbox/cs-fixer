@@ -80,6 +80,39 @@ vendor/bin/psb-cs-fixer fix
 vendor/bin/psb-cs-fixer check
 ```
 
+### PHTML templates
+
+For `.phtml` templates, use a dedicated config with a separate cache file:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use PhpCsFixer\Finder;
+use PhpSoftBox\CsFixer\Console\AbstractCsFixerHandler;
+
+return new class extends AbstractCsFixerHandler {
+    protected function getFinder(): Finder
+    {
+        return Finder::create()
+            ->in([__DIR__ . '/../resources/views'])
+            ->name('*.phtml');
+    }
+
+    protected function cacheFile(): ?string
+    {
+        return getcwd() . '/.php-cs-fixer.phtml.cache';
+    }
+};
+```
+
+The package includes `PhpSoftBox/echo_tag_html_escape`:
+- scans `<?= ... ?>` / `<?php echo ... ?>` in `phtml` files;
+- wraps unsafe output with `html(...)`;
+- allows `raw(...)` as an explicit trusted-output bypass;
+- also allows trusted `$content` and `$unsubscribeBlock` variables for email layout wrappers.
+
 Supported options:
 
 - `--config=<path>` (if omitted, config is resolved from the project root)

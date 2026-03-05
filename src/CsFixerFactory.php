@@ -102,6 +102,7 @@ final class CsFixerFactory
             // Custom rules
             'PhpSoftBox/blank_line_after_new_instantiation' => true,
             'PhpSoftBox/constructor_params_multiline'       => true,
+            'PhpSoftBox/echo_tag_html_escape'               => true,
             'PhpSoftBox/no_parentheses_around_new'          => true,
         ];
     }

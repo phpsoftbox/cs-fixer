@@ -13,13 +13,18 @@ abstract class FixerTestCase extends TestCase
 {
     abstract protected function createFixer(): FixerInterface;
 
+    protected function fileName(): string
+    {
+        return 'test.php';
+    }
+
     protected function doTest(string $expected, ?string $input = null): void
     {
         $fixer = $this->createFixer();
         $code  = $input ?? $expected;
 
         $tokens = Tokens::fromCode($code);
-        $fixer->fix(new SplFileInfo('test.php'), $tokens);
+        $fixer->fix(new SplFileInfo($this->fileName()), $tokens);
 
         self::assertSame($expected, $tokens->generateCode());
     }
