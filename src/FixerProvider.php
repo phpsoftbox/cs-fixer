@@ -9,6 +9,7 @@ use PhpSoftBox\CsFixer\Fixers\BlankLineAfterNewInstantiationFixer;
 use PhpSoftBox\CsFixer\Fixers\ConstructorParamsMultilineFixer;
 use PhpSoftBox\CsFixer\Fixers\EchoTagHtmlEscapeFixer;
 use PhpSoftBox\CsFixer\Fixers\NoParenthesesAroundNewFixer;
+use PhpSoftBox\CsFixer\Fixers\SqlFormatFixer;
 
 final class FixerProvider
 {
@@ -22,6 +23,7 @@ final class FixerProvider
             new ConstructorParamsMultilineFixer(),
             new EchoTagHtmlEscapeFixer(),
             new NoParenthesesAroundNewFixer(),
+            new SqlFormatFixer(),
         ];
     }
 }

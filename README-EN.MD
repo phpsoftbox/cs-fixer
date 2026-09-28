@@ -126,6 +126,32 @@ Supported options:
 - `--stop-on-violation`
 - `--sequential`
 
+### SQL formatting (`PhpSoftBox/sql_format`)
+
+Formats SQL inside PHP strings: literals, interpolated strings and concatenation chains like
+`'FROM ' . $connection->table('x') . ' t'`. Not part of `defaultRules()` — enable it explicitly:
+
+```php
+protected function extendRules(array $rules): array
+{
+    $rules['PhpSoftBox/sql_format'] = true;
+    // or with options:
+    // $rules['PhpSoftBox/sql_format'] = ['max_single_line_length' => 90, 'short_section_length' => 60, 'from_brackets' => false];
+
+    return $rules;
+}
+```
+
+- short single-line SQL stays single-line, longer than `max_single_line_length` (90) is split; multiline SQL is never
+  collapsed;
+- multiline SQL: quotes on their own lines, sections on new lines, indented `AND`/`OR`, indented subqueries, multiline
+  `ON` condition wrapped in brackets;
+- lists of up to three items no longer than `short_section_length` (60) stay on one line;
+- `from_brackets` wraps a multiline `FROM` list in brackets (MySQL/MariaDB only);
+- single quotes, double quotes only with interpolation, variables as `{$var}`;
+- SQL comments, backslashes in literals, heredoc and a `@nofixer` comment before the statement — the string is left
+  untouched. The result is re-parsed: SQL tokens and PHP expressions never change.
+
 ### Composer scripts
 
 Example `scripts` section:
