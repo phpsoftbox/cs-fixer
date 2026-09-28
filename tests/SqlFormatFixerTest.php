@@ -552,6 +552,36 @@ PHP,
     }
 
     /**
+     * Проверим, что после позиционного плейсхолдера `?` следующая секция начинается с новой строки.
+     *
+     * @see SqlFormatFixer::fix()
+     */
+    #[Test]
+    public function startsSectionAfterPositionalPlaceholder(): void
+    {
+        $this->assertFixed(
+            <<<'PHP'
+<?php
+$sql = '
+    SELECT TABLE_NAME
+    FROM information_schema.TABLES
+    WHERE TABLE_SCHEMA = ?
+        AND TABLE_NAME <> ?
+    ORDER BY TABLE_NAME
+';
+PHP,
+            <<<'PHP'
+<?php
+$sql = '
+    SELECT TABLE_NAME
+    FROM information_schema.TABLES
+    WHERE TABLE_SCHEMA = ? AND TABLE_NAME <> ? ORDER BY TABLE_NAME
+';
+PHP,
+        );
+    }
+
+    /**
      * Проверим, что фрагменты условий для QueryBuilder SQL-запросом не считаются.
      *
      * @see SqlFormatFixer::fix()

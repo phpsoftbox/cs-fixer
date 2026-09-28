@@ -104,6 +104,11 @@ final class SqlLexer
             return [SqlToken::COMMA, ','];
         }
 
+        // Позиционный плейсхолдер PDO.
+        if ($char === '?') {
+            return [SqlToken::PLACEHOLDER, '?'];
+        }
+
         if ($char === ':' && $next !== ':' && preg_match('/\G:[A-Za-z_][A-Za-z0-9_]*/', $text, $match, 0, $i) === 1) {
             // «::» — приведение типа в Postgres, одиночное двоеточие перед именем — плейсхолдер.
             if ($i === 0 || $text[$i - 1] !== ':') {
