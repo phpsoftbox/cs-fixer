@@ -149,6 +149,8 @@ protected function extendRules(array $rules): array
 - lists of up to three items no longer than `short_section_length` (60) stay on one line;
 - `from_brackets` wraps a multiline `FROM` list in brackets (MySQL/MariaDB only);
 - single quotes, double quotes only with interpolation, variables as `{$var}`;
+- expected values are left untouched: `assert*()`/`expect*()` arguments and `$expected*` variables are compared with
+  generated SQL byte by byte;
 - SQL comments, backslashes in literals, heredoc and a `@nofixer` comment before the statement — the string is left
   untouched. The result is re-parsed: SQL tokens and PHP expressions never change.
 

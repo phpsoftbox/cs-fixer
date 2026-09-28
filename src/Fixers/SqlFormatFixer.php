@@ -675,7 +675,52 @@ PHP
         $before = $tokens[$previous]->equalsAny(['=', '(', ',', '[', [T_DOUBLE_ARROW], [T_RETURN], [CT::T_NAMED_ARGUMENT_COLON]]);
         $after  = $tokens[$next]->equalsAny([';', ',', ')', ']']);
 
-        return $before && $after && !$this->hasComments($tokens, $previous, $start);
+        return $before && $after && !$this->hasComments($tokens, $previous, $start) && !$this->isExpectedValue($tokens, $start, $previous);
+    }
+
+    /**
+     * Эталон для побайтного сравнения: аргумент `assert*()`/`expect*()` (в том числе внутри массива) или значение
+     * переменной `$expected*`. Такую строку сравнивают с SQL, который строит код, — пробелы в ней значимы.
+     */
+    private function isExpectedValue(Tokens $tokens, int $start, int $previous): bool
+    {
+        if ($tokens[$previous]->equals('=')) {
+            $variable = $tokens->getPrevMeaningfulToken($previous);
+
+            return $variable !== null
+                && $tokens[$variable]->isGivenKind(T_VARIABLE)
+                && preg_match('/^\$expected/i', $tokens[$variable]->getContent()) === 1;
+        }
+
+        for ($i = $start - 1; $i >= 0; $i--) {
+            $token = $tokens[$i];
+
+            if ($token->equalsAny([';', '{', '}'])) {
+                return false;
+            }
+
+            // Закрытая скобка до строки — соседний аргумент, пропускаем его целиком.
+            if ($token->equals(')')) {
+                $i = $tokens->findBlockStart(Tokens::BLOCK_TYPE_PARENTHESIS_BRACE, $i);
+
+                continue;
+            }
+
+            if (!$token->equals('(')) {
+                continue;
+            }
+
+            $name = $tokens->getPrevMeaningfulToken($i);
+            if (
+                $name !== null
+                && $tokens[$name]->isGivenKind(T_STRING)
+                && preg_match('/^(assert|expect)/i', $tokens[$name]->getContent()) === 1
+            ) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
