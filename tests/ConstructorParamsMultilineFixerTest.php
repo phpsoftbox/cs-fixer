@@ -8,9 +8,11 @@ use PhpCsFixer\Fixer\FixerInterface;
 use PhpSoftBox\CsFixer\Fixers\ConstructorParamsMultilineFixer;
 use PhpSoftBox\CsFixer\Tests\Support\FixerTestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversMethod;
 use PHPUnit\Framework\Attributes\Test;
 
 #[CoversClass(ConstructorParamsMultilineFixer::class)]
+#[CoversMethod(ConstructorParamsMultilineFixer::class, 'fix')]
 final class ConstructorParamsMultilineFixerTest extends FixerTestCase
 {
     /**
@@ -31,6 +33,39 @@ PHP;
         $input = <<<'PHP'
 <?php
 class A { public function __construct(private Foo $foo, Bar $bar) {} }
+PHP;
+
+        $this->doTest($expected, $input);
+    }
+
+    /**
+     * Проверим, что единственный продвигаемый параметр без пробела после `(` переносится целиком, а `)` — на свою
+     * строку: раньше перенос вставлялся между типом и переменной.
+     *
+     * @see ConstructorParamsMultilineFixer::fix()
+     */
+    #[Test]
+    public function singlePromotedParamWithoutSpaceAfterParenthesis(): void
+    {
+        $expected = <<<'PHP'
+<?php
+class A
+{
+    public function __construct(
+        private B $runner
+    )
+    {
+    }
+}
+PHP;
+        $input = <<<'PHP'
+<?php
+class A
+{
+    public function __construct(private B $runner)
+    {
+    }
+}
 PHP;
 
         $this->doTest($expected, $input);
