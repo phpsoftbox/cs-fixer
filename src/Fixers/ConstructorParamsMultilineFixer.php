@@ -131,8 +131,9 @@ PHP
             }
             $paramIndent = $indent . '    ';
 
-            // Перенос после '('
+            // Перенос после '('. Вставка токена сдвигает индексы — позицию ')' пересчитываем.
             $this->ensureWhitespace($tokens, $openParen + 1, "\n" . $paramIndent);
+            $closeParen = $tokens->findBlockEnd(Tokens::BLOCK_TYPE_PARENTHESIS_BRACE, $openParen);
 
             // Перенос после каждой запятой внутри параметров
             $cursor = $openParen + 1;
