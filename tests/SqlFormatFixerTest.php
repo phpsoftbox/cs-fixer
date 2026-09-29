@@ -552,6 +552,36 @@ PHP,
     }
 
     /**
+     * Проверим, что после позиционного плейсхолдера `?` следующая секция начинается с новой строки.
+     *
+     * @see SqlFormatFixer::fix()
+     */
+    #[Test]
+    public function startsSectionAfterPositionalPlaceholder(): void
+    {
+        $this->assertFixed(
+            <<<'PHP'
+<?php
+$sql = '
+    SELECT TABLE_NAME
+    FROM information_schema.TABLES
+    WHERE TABLE_SCHEMA = ?
+        AND TABLE_NAME <> ?
+    ORDER BY TABLE_NAME
+';
+PHP,
+            <<<'PHP'
+<?php
+$sql = '
+    SELECT TABLE_NAME
+    FROM information_schema.TABLES
+    WHERE TABLE_SCHEMA = ? AND TABLE_NAME <> ? ORDER BY TABLE_NAME
+';
+PHP,
+        );
+    }
+
+    /**
      * Проверим, что фрагменты условий для QueryBuilder SQL-запросом не считаются.
      *
      * @see SqlFormatFixer::fix()
@@ -593,6 +623,72 @@ PHP);
 /** @nofixer SqlFixer */
 $sql = 'SELECT id, payload, status, attempts, available_at, reserved_at, created_at FROM queue_jobs WHERE status = :status';
 PHP);
+    }
+
+    /**
+     * Проверим, что эталон в `assert*()` не форматируется: его сравнивают с SQL, который строит код, побайтно.
+     *
+     * @see SqlFormatFixer::fix()
+     */
+    #[Test]
+    public function skipsAssertionArguments(): void
+    {
+        $this->assertFixed(<<<'PHP'
+<?php
+self::assertSame(
+    'SELECT * FROM "tickets" AS "t" WHERE ("t"."subject" LIKE :query) OR ("t"."description" LIKE :__qb_auto_1)',
+    $built['sql'],
+);
+self::assertSame(['sql' => 'SELECT id, payload, status, attempts, available_at, reserved_at FROM queue_jobs WHERE id = :id'], $built);
+$this->expectExceptionMessage('SELECT id, payload, status, attempts, available_at, reserved_at FROM queue_jobs WHERE id = :id');
+PHP);
+    }
+
+    /**
+     * Проверим, что значение переменной `$expected*` не форматируется.
+     *
+     * @see SqlFormatFixer::fix()
+     */
+    #[Test]
+    public function skipsExpectedVariables(): void
+    {
+        $this->assertFixed(<<<'PHP'
+<?php
+$expectedSql = 'SELECT id, payload, status, attempts, available_at, reserved_at FROM queue_jobs WHERE id = :id';
+PHP);
+    }
+
+    /**
+     * Проверим, что SQL в обычном вызове внутри теста форматируется: исключение только для эталонов.
+     *
+     * @see SqlFormatFixer::fix()
+     */
+    #[Test]
+    public function formatsSqlInRegularCallAfterAssertion(): void
+    {
+        $this->assertFixed(
+            <<<'PHP'
+<?php
+self::assertTrue($ok);
+$connection->execute(
+    '
+        SELECT
+            id,
+            payload,
+            status,
+            attempts,
+            available_at,
+            reserved_at
+        FROM queue_jobs
+        WHERE id = :id
+    ');
+PHP,
+            <<<'PHP'
+<?php
+self::assertTrue($ok);
+$connection->execute('SELECT id, payload, status, attempts, available_at, reserved_at FROM queue_jobs WHERE id = :id');
+PHP,
+        );
     }
 
     /**
